@@ -8,11 +8,12 @@ echo "[GRBOX] Установка начата..."
 apt update && apt upgrade -y
 apt install -y curl wget unzip docker.io docker-compose debian-keyring debian-archive-keyring apt-transport-https gnupg2
 
-# Установка Caddy напрямую из GitHub
-echo "[GRBOX] Установка Caddy напрямую из .deb пакета..."
-curl -LO https://github.com/caddyserver/caddy/releases/latest/download/caddy_2.7.6_amd64.deb
-dpkg -i caddy_2.7.6_amd64.deb
-rm caddy_2.7.6_amd64.deb
+# Установка Caddy через официальный PPA (Cloudsmith)
+echo "[GRBOX] Установка Caddy из репозитория Cloudsmith..."
+curl -sS https://dl.cloudsmith.io/public/caddy/stable/gpg.key | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/debian all main"     | tee /etc/apt/sources.list.d/caddy-stable.list
+apt update
+apt install -y caddy
 
 # Создание рабочей директории
 mkdir -p /opt/grbox
