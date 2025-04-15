@@ -18,9 +18,9 @@ rm caddy_2.7.6_linux_amd64.deb
 mkdir -p /opt/grbox
 cd /opt/grbox
 
-# Загрузка и распаковка архива
+# Загрузка и распаковка панели
 echo "[GRBOX] Загрузка панели..."
-curl -L -o GRBOX_Panel.zip https://yourdomain.com/GRBOX_Panel.zip
+curl -L -o GRBOX_Panel.zip https://grbox2025.github.io/grbox-panel/GRBOX_Panel.zip
 unzip GRBOX_Panel.zip
 rm GRBOX_Panel.zip
 
