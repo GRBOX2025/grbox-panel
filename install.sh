@@ -8,10 +8,14 @@ echo "[GRBOX] Установка начата..."
 apt update && apt upgrade -y
 apt install -y curl wget unzip docker.io docker-compose debian-keyring debian-archive-keyring apt-transport-https gnupg2
 
-# Установка Caddy через официальный PPA (Cloudsmith)
-echo "[GRBOX] Установка Caddy из репозитория Cloudsmith..."
+# Очистка старых источников и установка Caddy
+echo "[GRBOX] Очистка и установка Caddy..."
+rm -f /etc/apt/sources.list.d/caddy*.list
+rm -f /usr/share/keyrings/caddy-*.gpg
+
 curl -sS https://dl.cloudsmith.io/public/caddy/stable/gpg.key | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/debian all main"     | tee /etc/apt/sources.list.d/caddy-stable.list
+echo "deb [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/debian all main"     > /etc/apt/sources.list.d/caddy-stable.list
+
 apt update
 apt install -y caddy
 
