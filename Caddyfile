@@ -1,0 +1,4 @@
+:443 {
+	reverse_proxy localhost:2053
+	tls internal
+}

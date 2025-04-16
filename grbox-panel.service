@@ -1,15 +1,10 @@
 [Unit]
-Description=GRBOX Panel Service
+Description=GRBOX Panel
 After=network.target
-Wants=network.target
 
 [Service]
-Environment="XRAY_VMESS_AEAD_FORCED=false"
-Type=simple
-WorkingDirectory=/usr/local/GRBOX Panel/
-ExecStart=/usr/local/GRBOX Panel/GRBOX Panel
-Restart=on-failure
-RestartSec=5s
+ExecStart=/opt/grbox/backend
+Restart=always
 
 [Install]
 WantedBy=multi-user.target

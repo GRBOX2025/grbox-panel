@@ -1,54 +1,46 @@
 #!/bin/bash
 
 set -e
+echo "[GRBOX] Установка началась..."
 
-echo "[GRBOX] Установка начата..."
-
-# Обновление системы и установка зависимостей
+# Обновление и зависимости
 apt update && apt upgrade -y
-apt install -y curl wget unzip docker.io docker-compose gnupg2
-
-# Установка Caddy напрямую (без репозиториев)
-echo "[GRBOX] Установка Caddy вручную (без репозиториев)..."
-wget https://github.com/caddyserver/caddy/releases/download/v2.7.6/caddy_2.7.6_linux_amd64.deb
-dpkg -i caddy_2.7.6_linux_amd64.deb
-rm caddy_2.7.6_linux_amd64.deb
+apt install -y curl wget unzip git docker.io docker-compose gnupg2 golang caddy
 
 # Создание рабочей директории
 mkdir -p /opt/grbox
-cd /opt/grbox
-
-# Загрузка и распаковка панели
-echo "[GRBOX] Загрузка панели..."
-curl -L -o GRBOX_Panel.zip https://grbox2025.github.io/grbox-panel/GRBOX_Panel.zip
-unzip GRBOX_Panel.zip
-rm GRBOX_Panel.zip
-
-# Настройка systemd
-echo "[GRBOX] Настройка systemd..."
+cp -r backend /opt/grbox/
+cp -r telegram_bot /opt/grbox/
 cp grbox-panel.service /etc/systemd/system/grbox-panel.service
-chmod +x grbox-panel.sh
+cp Caddyfile /etc/caddy/Caddyfile
+
+# Компиляция backend
+echo "[GRBOX] Сборка backend..."
+cd /opt/grbox/backend
+go mod init grbox || true
+go mod tidy
+go build -o grbox-panel
+
+# Назначаем права и systemd
+chmod +x /opt/grbox/backend/grbox-panel
 systemctl daemon-reexec
 systemctl daemon-reload
 systemctl enable grbox-panel
 systemctl start grbox-panel
 
-# Запуск Telegram-бота (если есть)
-if [ -f "telegram_bot/install.sh" ]; then
-    echo "[GRBOX] Установка Telegram-бота..."
-    bash telegram_bot/install.sh
+# Запуск Telegram-бота (опционально)
+if [ -f "/opt/grbox/telegram_bot/bot.go" ]; then
+  echo "[GRBOX] Сборка Telegram-бота..."
+  cd /opt/grbox/telegram_bot
+  go mod init grboxbot || true
+  go mod tidy
+  go build -o grbox-bot
+  nohup ./grbox-bot > /opt/grbox/telegram_bot/bot.log 2>&1 &
 fi
 
-# Настройка Caddy
-echo "[GRBOX] Настройка HTTPS через Caddy..."
-cat <<EOF > /etc/caddy/Caddyfile
-:443 {
-    reverse_proxy localhost:2053
-    encode gzip
-    tls internal
-}
-EOF
+# Перезапуск Caddy
+echo "[GRBOX] Перезапуск Caddy..."
 systemctl restart caddy
 
-echo "[GRBOX] Установка завершена."
-echo "Панель доступна на: https://<ваш_домен> (или https://IP)"
+echo "[GRBOX] Установка завершена!"
+echo "Панель доступна на: https://<твой_IP>"
