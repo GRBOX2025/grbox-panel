@@ -1,8 +1,10 @@
 [Unit]
 Description=GRBOX Panel
 After=network.target
+
 [Service]
-ExecStart=/opt/grbox/grbox-panel
+ExecStart=/opt/grbox/backend/grbox-panel
 Restart=always
+
 [Install]
 WantedBy=multi-user.target

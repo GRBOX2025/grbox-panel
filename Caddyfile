@@ -1,4 +1,5 @@
 :443 {
-	reverse_proxy localhost:2053
-	tls internal
+    reverse_proxy localhost:2053
+    encode gzip
+    tls internal
 }

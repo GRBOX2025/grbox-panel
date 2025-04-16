@@ -1,1 +1,7 @@
-// full Telegram bot (Go) — create, my, block, синхронизация
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("GRBOX Telegram-бот запущен")
+}

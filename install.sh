@@ -1,60 +1,50 @@
 #!/bin/bash
 
 set -e
-echo "[GRBOX] Установка началась..."
+echo "[GRBOX] Установка финальной GRBOX Panel..."
 
-# Обновление и зависимости
-apt update && apt upgrade -y
-apt install -y curl wget unzip git docker.io docker-compose gnupg2 golang postgresql postgresql-contrib
+# Установка зависимостей
+apt update && apt install -y curl wget unzip gnupg2 golang
 
-# Установка Caddy вручную (через .deb)
+# Установка Caddy напрямую
 echo "[GRBOX] Установка Caddy..."
 wget https://github.com/caddyserver/caddy/releases/download/v2.7.6/caddy_2.7.6_linux_amd64.deb
-dpkg -i caddy_2.7.6_linux_amd64.deb || apt --fix-broken install -y
+dpkg -i caddy_2.7.6_linux_amd64.deb
 rm caddy_2.7.6_linux_amd64.deb
 
-# Настройка PostgreSQL
-echo "[GRBOX] Настройка PostgreSQL..."
-sudo -u postgres psql -c "CREATE USER grbox WITH PASSWORD 'grboxpass';"
-sudo -u postgres psql -c "CREATE DATABASE grboxdb OWNER grbox;"
-
-# Скачиваем и распаковываем GRBOX_Panel_Pro.zip
-echo "[GRBOX] Загрузка панели..."
+# Подготовка директории
 mkdir -p /opt/grbox
 cd /opt/grbox
-wget https://grbox2025.github.io/grbox-panel/GRBOX_Panel_Pro.zip -O panel.zip
+
+# Скачивание и распаковка панели
+echo "[GRBOX] Загрузка панели..."
+curl -L -o panel.zip https://grbox2025.github.io/grbox-panel/GRBOX_Panel_Final.zip
 unzip panel.zip
 rm panel.zip
 
-# Копируем системные файлы
+# Настройка systemd
+echo "[GRBOX] Установка службы..."
 cp grbox-panel.service /etc/systemd/system/grbox-panel.service
-cp Caddyfile /etc/caddy/Caddyfile
+chmod +x backend/main.go
 
-# Сборка backend
+# Компиляция backend
 echo "[GRBOX] Сборка backend..."
-cd /opt/grbox/backend
+cd backend
 go mod init grbox || true
 go mod tidy
 go build -o grbox-panel
+chmod +x grbox-panel
 
-# Сборка Telegram-бота
-echo "[GRBOX] Сборка Telegram-бота..."
-cd /opt/grbox/telegram_bot
-go mod init grboxbot || true
-go mod tidy
-go build -o grbox-bot
-nohup ./grbox-bot > /opt/grbox/telegram_bot/bot.log 2>&1 &
-
-# Назначаем права и systemd
-chmod +x /opt/grbox/backend/grbox-panel
+# Активация сервиса
 systemctl daemon-reexec
 systemctl daemon-reload
 systemctl enable grbox-panel
 systemctl start grbox-panel
 
-# Перезапуск Caddy
-echo "[GRBOX] Перезапуск Caddy..."
+# Настройка Caddy
+echo "[GRBOX] Настройка HTTPS через Caddy..."
+cp /opt/grbox/Caddyfile /etc/caddy/Caddyfile
 systemctl restart caddy
 
-echo "[GRBOX] Установка завершена!"
-echo "Панель доступна на: https://<твой_IP>"
+echo "[GRBOX] Установка завершена ✅"
+echo "Открывай: http://<твой_IP>:2053 или https://<твой_IP> (если Caddy работает)"
